@@ -1,5 +1,5 @@
 // Import Express.js
-const express = require('express');
+const express = require("express");
 
 // Create an Express app
 const app = express();
@@ -11,14 +11,28 @@ app.use(express.json());
 const port = process.env.PORT || 3000;
 const verifyToken = process.env.VERIFY_TOKEN;
 
-// Route for GET requests
-app.get('/', (req, res) => {
-  const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
+// Route for GET requests (verification)
+app.get("/", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const challenge = req.query["hub.challenge"];
+  const token = req.query["hub.verify_token"];
 
-  if (mode === 'subscribe' && token === verifyToken) {
-    console.log('WEBHOOK VERIFIED');
-    res.status(200).send(challenge);
-  } else {
-    res.status(403).end();
+  if (mode === "subscribe" && token === verifyToken) {
+    console.log("WEBHOOK VERIFIED");
+    return res.status(200).send(challenge);
   }
+  return res.status(403).end();
+});
+
+// Route for POST requests (echo just logs)
+app.post("/", (req, res) => {
+  const ts = new Date().toISOString().replace("T", " ").slice(0, 19);
+  console.log(`\n\nWebhook received ${ts}\n`);
+  console.log(JSON.stringify(req.body, null, 2));
+  return res.status(200).end();
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`\nListening on port ${port}\n`);
 });
